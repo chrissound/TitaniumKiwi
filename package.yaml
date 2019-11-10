@@ -1,0 +1,40 @@
+executables:
+  titaniumkiwi:
+    source-dirs: src
+    main: Main.hs
+license-file: LICENSE
+build-type: Simple
+maintainer: Chris Stryczynski
+dependencies:
+  - base
+  - optparse-applicative
+  - optparse-text
+  # common
+  - aeson
+  - bytestring
+  - stm
+  - split
+  - text
+  - time
+  - thyme
+  - binary
+  - binary-orphans
+  - old-locale
+  - directory
+  - pretty-simple
+  - string-conversions
+  - network
+  - unordered-containers
+  - containers
+  - rainbox
+  - rainbow
+  - unix
+  - brick
+  - vty
+name: TitaniumKiwi
+version: '0.1.0.0'
+extra-source-files: ChangeLog.md
+author: Chris Stryczynski
+license: BSD3
+default-extensions: 
+  - LambdaCase
