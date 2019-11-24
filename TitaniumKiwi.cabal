@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d6ae03d8ff95fa0ed5f33bad15da6e8634fda8b45cc211f51d7bba271de4df59
+-- hash: e42ef17476ddf602225f96e3ce8bf12daee1ab9281cb73217634ef9bfcdf4067
 
 name:           TitaniumKiwi
 version:        0.1.0.0
@@ -13,8 +13,6 @@ maintainer:     Chris Stryczynski
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
-extra-source-files:
-    ChangeLog.md
 
 executable titaniumkiwi
   main-is: Main.hs
@@ -23,6 +21,7 @@ executable titaniumkiwi
   hs-source-dirs:
       src
   default-extensions: LambdaCase
+  ghc-options: -threaded
   build-depends:
       aeson
     , base
@@ -32,6 +31,8 @@ executable titaniumkiwi
     , bytestring
     , containers
     , directory
+    , microlens
+    , microlens-th
     , network
     , old-locale
     , optparse-applicative
@@ -45,6 +46,7 @@ executable titaniumkiwi
     , text
     , thyme
     , time
+    , typed-process
     , unix
     , unordered-containers
     , vty

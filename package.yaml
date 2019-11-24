@@ -2,6 +2,8 @@ executables:
   titaniumkiwi:
     source-dirs: src
     main: Main.hs
+    ghc-options: -threaded
+extra-source-files: []
 license-file: LICENSE
 build-type: Simple
 maintainer: Chris Stryczynski
@@ -31,9 +33,11 @@ dependencies:
   - unix
   - brick
   - vty
+  - microlens
+  - microlens-th
+  - typed-process
 name: TitaniumKiwi
 version: '0.1.0.0'
-extra-source-files: ChangeLog.md
 author: Chris Stryczynski
 license: BSD3
 default-extensions: 
