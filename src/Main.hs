@@ -14,20 +14,23 @@ import Brick.Focus
   , focusRingCursor
   )
 import qualified Brick.Widgets.Edit as E
+import qualified Brick.Widgets.List as BL
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
 import Control.Monad.IO.Class
 import System.Process.Typed
 import Data.String
 import Data.String.Conversions
+import qualified Data.Vector as Vec
 
 data Name = NameField deriving (Eq, Ord, Show)
 
-data MyInput = MyInput deriving (Show, Eq, Ord)
+data MyInput = MyInput | MyList deriving (Show, Eq, Ord)
 
 data MyState e = MyState {
     inputPrompt :: (E.Editor T.Text MyInput)
   , myHistory :: [MyCommand]
+  , myList :: BL.List MyInput MyCommand
   } -- deriving (Show)
 
 data MyCommand =
@@ -57,9 +60,14 @@ htitle t =
   withAttr "infoTitle" $
   txt t
 
+miw :: Widget MyInput
+miw = str "test\nwtf"
+  -- undefined
+
 draw :: MyState e -> [Widget MyInput]
-draw (MyState f mcc) = [vBox [
-   vBox $ fmap (\x -> hLimit 60 $ hBox [txt $ "." <> (x)]) $ take 15 (repeat "")
+draw (MyState f mcc lll) = [vBox [
+   -- vBox $ fmap (\x -> hLimit 60 $ hBox [txt $ "." <> (x)]) $ take 15 (repeat "")
+    BL.renderList (const $ const $ str "test") True lll
   , form
   , vBox $ fmap (\x -> hLimit 60 $ hBox [txt $ ">>> " <> (_cmd' $ x)]) mcc
   ]]
@@ -88,6 +96,7 @@ app =
                   continue $ s {
                       inputPrompt = blankPrompt
                     , myHistory = (mc : myHistory s)
+                    , myList = BL.listInsert 0 mc (myList s)
                     }
                 VtyEvent vee@(V.EvKey k ms) -> do
                     r <- E.handleEditorEvent vee $ inputPrompt s
@@ -112,7 +121,7 @@ main = do
 
         -- initialUserCommand = []
         -- f = mkForm
-    let s = MyState blankPrompt []
+    let s = MyState blankPrompt [] (BL.list MyList (Vec.fromList []) 1)
 
     initialVty <- buildVty
     f' <- customMain initialVty buildVty Nothing app s
