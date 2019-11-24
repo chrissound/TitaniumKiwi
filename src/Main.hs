@@ -22,6 +22,10 @@ import System.Process.Typed
 import Data.String
 import Data.String.Conversions
 import qualified Data.Vector as Vec
+import System.Exit
+import qualified Brick.AttrMap as A
+import Data.Foldable
+import Data.Bool
 
 data Name = NameField deriving (Eq, Ord, Show)
 
@@ -37,22 +41,25 @@ data MyCommand =
     MyCommand { _cmd' :: T.Text
              , _stdout' :: T.Text
              , _stderr' :: T.Text
-             , _exitcode' :: Int
+             , _exitcode' :: ExitCode
              }
              deriving (Show)
 
-data UserCommand =
-    UserCommand { _cmd :: T.Text}
-             deriving (Show)
+-- data UserCommand =
+--     UserCommand { _cmd :: T.Text}
+--              deriving (Show)
 
 makeLenses ''MyCommand
-makeLenses ''UserCommand
+-- makeLenses ''UserCommand
 
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (E.editAttr, V.white `on` V.black)
   , (E.editFocusedAttr, V.black `on` V.yellow)
+  , (BL.listAttr,            fg V.white)
+  , (BL.listSelectedAttr,    fg V.blue)
+  , (customAttr,            fg V.cyan)
   ]
 
 htitle t =
@@ -60,16 +67,42 @@ htitle t =
   withAttr "infoTitle" $
   txt t
 
-miw :: Widget MyInput
-miw = str "test\nwtf"
+customAttr :: A.AttrName
+customAttr = BL.listSelectedAttr <> "custom"
+
+miw :: Bool -> MyCommand -> Widget MyInput
+-- miw True e = withAttr customAttr $ str $ "(✓) " <> (cs $ _cmd' e)
+-- miw False e = str $ "(x)  " <> show e
+miw selected e = bool id (withAttr customAttr) selected $ llll
+  where llll = txt ((ecti $ _exitcode' e) <> _cmd' e)
   -- undefined
+
+ecti (ExitFailure _) = "(x) $ "
+ecti ExitSuccess = "(✓) $ "
+
+takeLeftover :: [a] -> t -> [a]
+takeLeftover [] _ = []
+takeLeftover (x:xss) _ = xss
+
+lastN' :: Int -> [a] -> [a]
+lastN' n xs = foldl' takeLeftover xs (drop n xs)
+
+fillRemaining :: a -> [a] -> [a]
+fillRemaining x v = v ++ (repeat x)
+
+xxx l = do
+  let th = 10
+  case (BL.listSelectedElement l) of
+    Just (_, x) -> txt . T.unlines . take th . fillRemaining "..." . lastN' th . T.lines $ _stdout' x <> _stderr' x
+    Nothing -> vBox $ take 6 $ repeat $ str "."
 
 draw :: MyState e -> [Widget MyInput]
 draw (MyState f mcc lll) = [vBox [
    -- vBox $ fmap (\x -> hLimit 60 $ hBox [txt $ "." <> (x)]) $ take 15 (repeat "")
-    BL.renderList (const $ const $ str "test") True lll
+    -- vLimit 5 $ vBox $ take 6 $ repeat $ str "."
+    xxx lll
   , form
-  , vBox $ fmap (\x -> hLimit 60 $ hBox [txt $ ">>> " <> (_cmd' $ x)]) mcc
+  , BL.renderList (miw) True lll
   ]]
     where
         -- form = B.border $ padTop (Pad 1) $ hLimit 50 $ renderForm f
@@ -87,16 +120,21 @@ app =
             case ev of
                 VtyEvent (V.EvResize {})     -> continue s
                 VtyEvent (V.EvKey V.KEsc [])   -> halt s
+                VtyEvent (V.EvKey V.KPageUp [])   -> do
+                  continue $ s { myList = BL.listMoveBy (-1) $ myList s }
+                VtyEvent (V.EvKey V.KPageDown [])   -> do
+                  continue $ s { myList = BL.listMoveBy 1 $ myList s }
+                  -- continue $ s { myList = BL.listReverse $ myList s }
                 -- Enter quits only when we aren't in the multi-line editor.
                 VtyEvent (V.EvKey V.KEnter []) -> do
                   let mc'' = T.concat $ E.getEditContents $ inputPrompt s
                   (exitCode, out, err) <- liftIO $ do
                     readProcess $ fromString $ cs mc''
-                  let mc = MyCommand (mc'') (cs out) (cs err) (read $ show exitCode)
+                  let mc = MyCommand (mc'') (cs out) (cs err) (exitCode)
                   continue $ s {
                       inputPrompt = blankPrompt
                     , myHistory = (mc : myHistory s)
-                    , myList = BL.listInsert 0 mc (myList s)
+                    , myList = BL.listMoveTo 0 $ BL.listInsert 0 mc (myList s)
                     }
                 VtyEvent vee@(V.EvKey k ms) -> do
                     r <- E.handleEditorEvent vee $ inputPrompt s
@@ -121,6 +159,7 @@ main = do
 
         -- initialUserCommand = []
         -- f = mkForm
+    let bc = MyCommand "" "" ""
     let s = MyState blankPrompt [] (BL.list MyList (Vec.fromList []) 1)
 
     initialVty <- buildVty

@@ -36,6 +36,7 @@ dependencies:
   - microlens
   - microlens-th
   - typed-process
+  - vector
 name: TitaniumKiwi
 version: '0.1.0.0'
 author: Chris Stryczynski

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e42ef17476ddf602225f96e3ce8bf12daee1ab9281cb73217634ef9bfcdf4067
+-- hash: 7bbe49883ca6ac140e366baedb0c49bb03a0387bd9128ee451454d4a2a71e3b1
 
 name:           TitaniumKiwi
 version:        0.1.0.0
@@ -49,5 +49,6 @@ executable titaniumkiwi
     , typed-process
     , unix
     , unordered-containers
+    , vector
     , vty
   default-language: Haskell2010
